@@ -1,0 +1,137 @@
+import time
+import random
+
+
+# ---------------- Interpolation Search ----------------
+def interpolation_search(arr, target):
+    """
+    Interpolation Search
+    Time Complexity:
+        Best    : O(1)
+        Average : O(log log n)
+        Worst   : O(n)
+    Space Complexity: O(1)
+    """
+
+    low = 0
+    high = len(arr) - 1
+    comparisons = 0
+
+    while low <= high and arr[low] <= target <= arr[high]:
+
+        comparisons += 1
+
+        if low == high:
+            if arr[low] == target:
+                return low, comparisons
+            return -1, comparisons
+
+        # Prevent division by zero
+        if arr[high] == arr[low]:
+            break
+
+        pos = low + (
+            (target - arr[low]) * (high - low)
+            // (arr[high] - arr[low])
+        )
+
+        if arr[pos] == target:
+            return pos, comparisons
+
+        elif arr[pos] < target:
+            low = pos + 1
+
+        else:
+            high = pos - 1
+
+    return -1, comparisons
+
+
+# ---------------- Binary Search ----------------
+def binary_search(arr, target):
+
+    low = 0
+    high = len(arr) - 1
+
+    comparisons = 0
+
+    while low <= high:
+
+        comparisons += 1
+
+        mid = (low + high) // 2
+
+        if arr[mid] == target:
+            return mid, comparisons
+
+        elif arr[mid] < target:
+            low = mid + 1
+
+        else:
+            high = mid - 1
+
+    return -1, comparisons
+
+
+# ---------------- Performance Analysis ----------------
+def performance_analysis():
+
+    sizes = [1000, 5000, 10000, 50000, 100000]
+
+    print("{:>10} {:>14} {:>14} {:>16} {:>16}".format(
+        "Size",
+        "IS Time(ms)",
+        "BS Time(ms)",
+        "IS Compare",
+        "BS Compare"
+    ))
+
+    print("-" * 75)
+
+    for size in sizes:
+
+        arr = sorted(random.sample(range(size * 10), size))
+
+        target = arr[random.randint(0, size - 1)]
+
+        # Interpolation Search
+        start = time.perf_counter()
+
+        for _ in range(100):
+            idx_is, comp_is = interpolation_search(arr, target)
+
+        is_time = (time.perf_counter() - start) / 100 * 1000
+
+        # Binary Search
+        start = time.perf_counter()
+
+        for _ in range(100):
+            idx_bs, comp_bs = binary_search(arr, target)
+
+        bs_time = (time.perf_counter() - start) / 100 * 1000
+
+        print("{:>10} {:>14.4f} {:>14.4f} {:>16} {:>16}".format(
+            size,
+            is_time,
+            bs_time,
+            comp_is,
+            comp_bs
+        ))
+
+
+# ---------------- Main ----------------
+
+arr = [2, 5, 10, 15, 23, 35, 48, 60, 75, 90, 105, 120]
+
+target = 35
+
+index, comparisons = interpolation_search(arr, target)
+
+print("Array :", arr)
+print("Target:", target)
+print("Found at Index :", index)
+print("Comparisons :", comparisons)
+
+print()
+
+performance_analysis()
