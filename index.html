@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>String Matching Algorithms</title>
+
+<style>
+body{
+    font-family: Arial, sans-serif;
+    background:#f4f6f9;
+    margin:0;
+    padding:20px;
+}
+
+.container{
+    max-width:900px;
+    margin:auto;
+    background:#fff;
+    padding:25px;
+    border-radius:10px;
+    box-shadow:0 0 10px rgba(0,0,0,.2);
+}
+
+h1{
+    text-align:center;
+    color:#0d6efd;
+}
+
+label{
+    font-weight:bold;
+}
+
+input{
+    width:100%;
+    padding:10px;
+    margin:8px 0 15px;
+    border:1px solid #ccc;
+    border-radius:5px;
+    font-size:16px;
+}
+
+button{
+    background:#0d6efd;
+    color:white;
+    border:none;
+    padding:10px 20px;
+    font-size:16px;
+    border-radius:5px;
+    cursor:pointer;
+}
+
+button:hover{
+    background:#0b5ed7;
+}
+
+table{
+    width:100%;
+    margin-top:20px;
+    border-collapse:collapse;
+}
+
+table,th,td{
+    border:1px solid #ddd;
+}
+
+th{
+    background:#0d6efd;
+    color:white;
+}
+
+th,td{
+    padding:10px;
+    text-align:center;
+}
+
+.result{
+    margin-top:20px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>Comparative Analysis of String Matching Algorithms</h1>
+
+<label>Text</label>
+<input type="text" id="text"
+value="AABAACAADAABAABA">
+
+<label>Pattern</label>
+<input type="text" id="pattern"
+value="AABA">
+
+<button onclick="runAlgorithms()">Run Algorithms</button>
+
+<div class="result" id="result"></div>
+
+</div>
+
+<script>
+
+//---------------- Naive ----------------//
+function naiveSearch(text, pattern){
+
+let matches=[];
+let comparisons=0;
+
+for(let i=0;i<=text.length-pattern.length;i++){
+
+let j=0;
+
+while(j<pattern.length){
+
+comparisons++;
+
+if(text[i+j]!=pattern[j])
+break;
+
+j++;
+
+}
+
+if(j==pattern.length)
+matches.push(i);
+
+}
+
+return {matches,comparisons};
+
+}
+
+//---------------- LPS ----------------//
+function computeLPS(pattern){
+
+let lps=new Array(pattern.length).fill(0);
+
+let len=0;
+let i=1;
+
+while(i<pattern.length){
+
+if(pattern[i]==pattern[len]){
+
+len++;
+lps[i]=len;
+i++;
+
+}
+
+else{
+
+if(len!=0)
+len=lps[len-1];
+
+else{
+
+lps[i]=0;
+i++;
+
+}
+
+}
+
+}
+
+return lps;
+
+}
+
+//---------------- KMP ----------------//
+function kmpSearch(text,pattern){
+
+let lps=computeLPS(pattern);
+
+let matches=[];
+let comparisons=0;
+
+let i=0;
+let j=0;
+
+while(i<text.length){
+
+comparisons++;
+
+if(pattern[j]==text[i]){
+
+i++;
+j++;
+
+}
+
+if(j==pattern.length){
+
+matches.push(i-j);
+j=lps[j-1];
+
+}
+
+else if(i<text.length && pattern[j]!=text[i]){
+
+if(j!=0)
+j=lps[j-1];
+
+else
+i++;
+
+}
+
+}
+
+return {matches,comparisons};
+
+}
+
+//---------------- Rabin Karp ----------------//
+function rabinKarp(text,pattern){
+
+const d=256;
+const q=101;
+
+let n=text.length;
+let m=pattern.length;
+
+let h=1;
+
+for(let i=0;i<m-1;i++)
+h=(h*d)%q;
+
+let p=0;
+let t=0;
+
+let matches=[];
+let comparisons=0;
+
+for(let i=0;i<m;i++){
+
+p=(d*p+pattern.charCodeAt(i))%q;
+t=(d*t+text.charCodeAt(i))%q;
+
+}
+
+for(let s=0;s<=n-m;s++){
+
+if(p==t){
+
+let k;
+
+for(k=0;k<m;k++){
+
+comparisons++;
+
+if(text[s+k]!=pattern[k])
+break;
+
+}
+
+if(k==m)
+matches.push(s);
+
+}
+
+if(s<n-m){
+
+t=(d*(t-text.charCodeAt(s)*h)+text.charCodeAt(s+m))%q;
+
+if(t<0)
+t+=q;
+
+}
+
+}
+
+return {matches,comparisons};
+
+}
+
+//---------------- Display ----------------//
+function runAlgorithms(){
+
+let text=document.getElementById("text").value;
+let pattern=document.getElementById("pattern").value;
+
+let naive=naiveSearch(text,pattern);
+let kmp=kmpSearch(text,pattern);
+let rk=rabinKarp(text,pattern);
+
+document.getElementById("result").innerHTML=`
+
+<table>
+
+<tr>
+<th>Algorithm</th>
+<th>Matches</th>
+<th>Comparisons</th>
+</tr>
+
+<tr>
+<td>Naive</td>
+<td>${naive.matches.join(", ")}</td>
+<td>${naive.comparisons}</td>
+</tr>
+
+<tr>
+<td>KMP</td>
+<td>${kmp.matches.join(", ")}</td>
+<td>${kmp.comparisons}</td>
+</tr>
+
+<tr>
+<td>Rabin-Karp</td>
+<td>${rk.matches.join(", ")}</td>
+<td>${rk.comparisons}</td>
+</tr>
+
+</table>
+
+`;
+
+}
+
+runAlgorithms();
+
+</script>
+
+</body>
+</html>

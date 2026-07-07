@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>MST using Kruskal & Prim</title>
+
+<style>
+
+body{
+    font-family:Arial;
+    background:#eef2f7;
+    margin:30px;
+}
+
+.container{
+    max-width:900px;
+    margin:auto;
+    background:white;
+    padding:25px;
+    border-radius:10px;
+    box-shadow:0 0 15px rgba(0,0,0,.2);
+}
+
+h1{
+    text-align:center;
+    color:#1565c0;
+}
+
+button{
+    padding:12px 25px;
+    background:#1565c0;
+    color:white;
+    border:none;
+    border-radius:5px;
+    cursor:pointer;
+    font-size:16px;
+}
+
+button:hover{
+    background:#0d47a1;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:20px;
+}
+
+th,td{
+    border:1px solid #ccc;
+    padding:10px;
+    text-align:center;
+}
+
+th{
+    background:#1565c0;
+    color:white;
+}
+
+</style>
+
+</head>
+<body>
+
+<div class="container">
+
+<h1>Kruskal's and Prim's Algorithm</h1>
+
+<button onclick="run()">Generate MST</button>
+
+<div id="output"></div>
+
+</div>
+
+<script>
+
+const edges=[
+[7,0,1],
+[5,0,3],
+[8,1,2],
+[9,1,3],
+[7,1,4],
+[5,2,4],
+[15,3,4],
+[6,3,5],
+[8,4,5],
+[9,4,6],
+[11,5,6]
+];
+
+const n=7;
+
+
+//---------------- Union Find ----------------
+
+class UnionFind{
+
+constructor(n){
+
+this.parent=[];
+
+this.rank=[];
+
+for(let i=0;i<n;i++){
+
+this.parent.push(i);
+
+this.rank.push(0);
+
+}
+
+}
+
+find(x){
+
+if(this.parent[x]!=x)
+
+this.parent[x]=this.find(this.parent[x]);
+
+return this.parent[x];
+
+}
+
+union(x,y){
+
+let rx=this.find(x);
+
+let ry=this.find(y);
+
+if(rx==ry) return false;
+
+if(this.rank[rx]<this.rank[ry])
+
+[rx,ry]=[ry,rx];
+
+this.parent[ry]=rx;
+
+if(this.rank[rx]==this.rank[ry])
+
+this.rank[rx]++;
+
+return true;
+
+}
+
+}
+
+
+//---------------- Kruskal ----------------
+
+function kruskal(){
+
+let e=[...edges];
+
+e.sort((a,b)=>a[0]-b[0]);
+
+let uf=new UnionFind(n);
+
+let mst=[];
+
+let cost=0;
+
+for(let edge of e){
+
+let [w,u,v]=edge;
+
+if(uf.union(u,v)){
+
+mst.push([u,v,w]);
+
+cost+=w;
+
+}
+
+}
+
+return {mst,cost};
+
+}
+
+
+//---------------- Prim ----------------
+
+function prim(){
+
+let adj={};
+
+for(let [w,u,v] of edges){
+
+if(!adj[u]) adj[u]=[];
+
+if(!adj[v]) adj[v]=[];
+
+adj[u].push([v,w]);
+
+adj[v].push([u,w]);
+
+}
+
+let visited=new Array(n).fill(false);
+
+visited[0]=true;
+
+let mst=[];
+
+let cost=0;
+
+while(mst.length<n-1){
+
+let min=9999;
+
+let a=-1,b=-1;
+
+for(let i=0;i<n;i++){
+
+if(visited[i]){
+
+for(let [v,w] of (adj[i]||[])){
+
+if(!visited[v] && w<min){
+
+min=w;
+
+a=i;
+
+b=v;
+
+}
+
+}
+
+}
+
+}
+
+visited[b]=true;
+
+mst.push([a,b,min]);
+
+cost+=min;
+
+}
+
+return {mst,cost};
+
+}
+
+
+//---------------- Display ----------------
+
+function run(){
+
+let k=kruskal();
+
+let p=prim();
+
+let html="";
+
+html+="<h2>Kruskal's MST</h2>";
+
+html+="<table>";
+
+html+="<tr><th>Edge</th><th>Weight</th></tr>";
+
+k.mst.forEach(e=>{
+
+html+=`<tr><td>${e[0]} - ${e[1]}</td><td>${e[2]}</td></tr>`;
+
+});
+
+html+=`<tr><th>Total Cost</th><th>${k.cost}</th></tr>`;
+
+html+="</table>";
+
+html+="<br>";
+
+html+="<h2>Prim's MST</h2>";
+
+html+="<table>";
+
+html+="<tr><th>Edge</th><th>Weight</th></tr>";
+
+p.mst.forEach(e=>{
+
+html+=`<tr><td>${e[0]} - ${e[1]}</td><td>${e[2]}</td></tr>`;
+
+});
+
+html+=`<tr><th>Total Cost</th><th>${p.cost}</th></tr>`;
+
+html+="</table>";
+
+document.getElementById("output").innerHTML=html;
+
+}
+
+</script>
+
+</body>
+</html>
