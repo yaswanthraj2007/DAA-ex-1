@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matrix Chain Multiplication Visualizer</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --accent-color: #38bdf8;
+            --accent-hover: #0284c7;
+            --text-color: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+            --success-color: #4ade80;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding: 2rem 1rem;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+            display: flex;
+            flex-direction: flex-col;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        header {
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1rem;
+        }
+
+        header h1 {
+            font-size: 1.8rem;
+            color: var(--accent-color);
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+        }
+
+        .input-group {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-color);
+            font-size: 1rem;
+        }
+
+        input[type="text"]:focus {
+            outline: 2px solid var(--accent-color);
+        }
+
+        button {
+            padding: 0.75rem 1.5rem;
+            background-color: var(--accent-color);
+            color: #000;
+            font-weight: 600;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        button:hover {
+            background-color: var(--accent-hover);
+            color: #fff;
+        }
+
+        .dimensions-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .chip {
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .chip span {
+            color: var(--accent-color);
+            font-weight: 600;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .stat-box {
+            background-color: var(--bg-color);
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .stat-box .label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-box .value {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: var(--success-color);
+            word-break: break-all;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            text-align: center;
+        }
+
+        th, td {
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: var(--bg-color);
+            color: var(--accent-color);
+            font-size: 0.9rem;
+        }
+
+        td {
+            font-family: monospace;
+            font-size: 0.95rem;
+        }
+
+        .cell-empty {
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Matrix Chain Multiplication</h1>
+        <p>Dynamic Programming Optimization Visualizer</p>
+    </header>
+
+    <div class="card">
+        <label for="dimsInput" style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">
+            Enter Dimensions p<sub>0</sub>, p<sub>1</sub>, ..., p<sub>n</sub> (comma-separated):
+        </label>
+        <div class="input-group">
+            <input type="text" id="dimsInput" value="10, 30, 5, 60, 10" placeholder="e.g. 10, 30, 5, 60, 10">
+            <button onclick="calculateMCM()">Calculate</button>
+        </div>
+
+        <div id="matrixList" class="dimensions-list"></div>
+    </div>
+
+    <div class="card">
+        <h2>Optimal Results</h2>
+        <div class="results-grid">
+            <div class="stat-box">
+                <div class="label">Minimum Scalar Multiplications</div>
+                <div class="value" id="resCost">-</div>
+            </div>
+            <div class="stat-box">
+                <div class="label">Optimal Parenthesization</div>
+                <div class="value" id="resParens" style="color: var(--accent-color);">-</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>DP Cost Table m[i][j]</h2>
+        <div style="overflow-x: auto;">
+            <table id="dpTable">
+                <thead>
+                    <tr><th>-</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>-</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    function matrixChainOrder(dims) {
+        const n = dims.length - 1;
+        const m = Array.from({ length: n + 1 }, () => Array(n + 1).fill(0));
+        const s = Array.from({ length: n + 1 }, () => Array(n + 1).fill(0));
+
+        for (let l = 2; l <= n; l++) {
+            for (let i = 1; i <= n - l + 1; i++) {
+                const j = i + l - 1;
+                m[i][j] = Infinity;
+                for (let k = i; k < j; k++) {
+                    const cost = m[i][k] + m[k + 1][j] + dims[i - 1] * dims[k] * dims[j];
+                    if (cost < m[i][j]) {
+                        m[i][j] = cost;
+                        s[i][j] = k;
+                    }
+                }
+            }
+        }
+        return { m, s, n };
+    }
+
+    function buildOptimalParens(s, i, j) {
+        if (i === j) return `A${i}`;
+        const k = s[i][j];
+        const left = buildOptimalParens(s, i, k);
+        const right = buildOptimalParens(s, k + 1, j);
+        return `(${left} × ${right})`;
+    }
+
+    function calculateMCM() {
+        const inputStr = document.getElementById('dimsInput').value;
+        const dims = inputStr.split(',').map(num => parseInt(num.trim(), 10)).filter(num => !isNaN(num));
+
+        if (dims.length < 2) {
+            alert('Please enter at least 2 dimensions.');
+            return;
+        }
+
+        const n = dims.length - 1;
+
+        // Render Matrix Dimensions List
+        const matrixListContainer = document.getElementById('matrixList');
+        matrixListContainer.innerHTML = '';
+        for (let i = 0; i < n; i++) {
+            const chip = document.createElement('div');
+            chip.className = 'chip';
+            chip.innerHTML = `Matrix <span>A${i + 1}</span>: ${dims[i]} × ${dims[i + 1]}`;
+            matrixListContainer.appendChild(chip);
+        }
+
+        // Calculate DP
+        const { m, s } = matrixChainOrder(dims);
+
+        // Display Summary Stats
+        document.getElementById('resCost').innerText = m[1][n].toLocaleString();
+        document.getElementById('resParens').innerText = buildOptimalParens(s, 1, n);
+
+        // Render DP Table
+        const table = document.getElementById('dpTable');
+        table.innerHTML = '';
+
+        // Table Header
+        const thead = document.createElement('thead');
+        const headerRow = document.createElement('tr');
+        headerRow.appendChild(document.createElement('th')); // Corner empty header
+        for (let j = 1; j <= n; j++) {
+            const th = document.createElement('th');
+            th.innerText = `A${j}`;
+            headerRow.appendChild(th);
+        }
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
+
+        // Table Body
+        const tbody = document.createElement('tbody');
+        for (let i = 1; i <= n; i++) {
+            const row = document.createElement('tr');
+            
+            // Row Label
+            const rowHeader = document.createElement('th');
+            rowHeader.innerText = `A${i}`;
+            row.appendChild(rowHeader);
+
+            for (let j = 1; j <= n; j++) {
+                const td = document.createElement('td');
+                if (j < i) {
+                    td.innerText = '---';
+                    td.className = 'cell-empty';
+                } else {
+                    td.innerText = m[i][j].toLocaleString();
+                    if (i === 1 && j === n) {
+                        td.style.color = 'var(--success-color)';
+                        td.style.fontWeight = 'bold';
+                    }
+                }
+                row.appendChild(td);
+            }
+            tbody.appendChild(row);
+        }
+        table.appendChild(tbody);
+    }
+
+    // Auto-calculate on initial page load
+    window.onload = calculateMCM;
+</script>
+
+</body>
+</html>
