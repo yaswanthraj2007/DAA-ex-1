@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Min-Max: Divide & Conquer Analysis</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --accent-color: #38bdf8;
+            --accent-hover: #0284c7;
+            --text-color: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+            --success-color: #4ade80;
+            --warning-color: #fbbf24;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding: 2rem 1rem;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        header {
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1.5rem;
+        }
+
+        header h1 {
+            font-size: 1.8rem;
+            color: var(--accent-color);
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+        }
+
+        .card h2 {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-color);
+            font-size: 1rem;
+        }
+
+        input[type="text"]:focus {
+            outline: 2px solid var(--accent-color);
+        }
+
+        button {
+            padding: 0.75rem 1.5rem;
+            background-color: var(--accent-color);
+            color: #000;
+            font-weight: 600;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        button:hover {
+            background-color: var(--accent-hover);
+            color: #fff;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .stat-box {
+            background-color: var(--bg-color);
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .stat-box .label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-box .value {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: var(--accent-color);
+        }
+
+        .stat-box .value.highlight {
+            color: var(--success-color);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            text-align: left;
+        }
+
+        th, td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: var(--bg-color);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+        }
+
+        tr:hover {
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+
+        .badge {
+            background-color: rgba(56, 189, 248, 0.2);
+            color: var(--accent-color);
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Min-Max Algorithm Analysis</h1>
+        <p>Divide & Conquer vs. Naive Sequential Approach</p>
+    </header>
+
+    <!-- Custom Demonstration Section -->
+    <div class="card">
+        <h2>Interactive Array Demo</h2>
+        <div class="input-group">
+            <input type="text" id="arrayInput" value="3, 1, 7, 4, 9, 2, 8, 5, 6, 0" placeholder="Comma-separated numbers">
+            <button onclick="runCustomDemo()">Run Analysis</button>
+        </div>
+
+        <div class="results-grid">
+            <div class="stat-box">
+                <div class="label">Minimum Value</div>
+                <div class="value" id="resMin">-</div>
+            </div>
+            <div class="stat-box">
+                <div class="label">Maximum Value</div>
+                <div class="value" id="resMax">-</div>
+            </div>
+            <div class="stat-box">
+                <div class="label">D&C Comparisons</div>
+                <div class="value highlight" id="resDCComps">-</div>
+            </div>
+            <div class="stat-box">
+                <div class="label">Naive Comparisons</div>
+                <div class="value" id="resNaiveComps">-</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Benchmarking Section -->
+    <div class="card">
+        <h2>Performance Benchmark <button onclick="runBenchmark()" style="margin-left: auto; font-size: 0.85rem; padding: 0.4rem 0.8rem;">Run Benchmark</button></h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">Comparison counts for random arrays of varying sizes against theoretical formula <span class="badge">3n/2 - 2</span>.</p>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Array Size</th>
+                    <th>D&C Comps</th>
+                    <th>Naive Comps</th>
+                    <th>Formula (3n/2 - 2)</th>
+                </tr>
+            </thead>
+            <tbody id="benchmarkTable">
+                <tr>
+                    <td colspan="4" style="text-align: center; color: var(--text-muted);">Click "Run Benchmark" to execute tests.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    let globalDcCount = 0;
+
+    // Divide & Conquer Algorithm
+    function minMaxDC(arr, low, high) {
+        // Base case: single element
+        if (low === high) {
+            return { min: arr[low], max: arr[low] };
+        }
+
+        // Base case: two elements
+        if (high === low + 1) {
+            globalDcCount++;
+            if (arr[low] < arr[high]) {
+                return { min: arr[low], max: arr[high] };
+            } else {
+                return { min: arr[high], max: arr[low] };
+            }
+        }
+
+        // Divide
+        const mid = Math.floor((low + high) / 2);
+        const left = minMaxDC(arr, low, mid);
+        const right = minMaxDC(arr, mid + 1, high);
+
+        // Conquer: combine with 2 comparisons
+        globalDcCount++;
+        const overallMin = left.min < right.min ? left.min : right.min;
+
+        globalDcCount++;
+        const overallMax = left.max > right.max ? left.max : right.max;
+
+        return { min: overallMin, max: overallMax };
+    }
+
+    // Naive Sequential Algorithm
+    function minMaxNaive(arr) {
+        let mn = arr[0];
+        let mx = arr[0];
+        let comps = 0;
+
+        for (let i = 1; i < arr.length; i++) {
+            let x = arr[i];
+            comps++;
+            if (x < mn) mn = x;
+            comps++;
+            if (x > mx) mx = x;
+        }
+
+        return { min: mn, max: mx, comps: comps };
+    }
+
+    // Interactive Demo Runner
+    function runCustomDemo() {
+        const inputStr = document.getElementById('arrayInput').value;
+        const arr = inputStr.split(',').map(num => parseFloat(num.trim())).filter(num => !isNaN(num));
+
+        if (arr.length === 0) {
+            alert('Please enter a valid array of numbers.');
+            return;
+        }
+
+        globalDcCount = 0;
+        const dcResult = minMaxDC(arr, 0, arr.length - 1);
+        const naiveResult = minMaxNaive(arr);
+
+        document.getElementById('resMin').innerText = dcResult.min;
+        document.getElementById('resMax').innerText = dcResult.max;
+        document.getElementById('resDCComps').innerText = globalDcCount;
+        document.getElementById('resNaiveComps').innerText = naiveResult.comps;
+    }
+
+    // Benchmark Table Runner
+    function runBenchmark() {
+        const sizes = [10, 100, 1000, 10000];
+        const tbody = document.getElementById('benchmarkTable');
+        tbody.innerHTML = '';
+
+        sizes.forEach(size => {
+            // Generate random array
+            const arr = Array.from({ length: size }, () => Math.floor(Math.random() * 10000) + 1);
+
+            globalDcCount = 0;
+            minMaxDC(arr, 0, arr.length - 1);
+            const dcComps = globalDcCount;
+
+            const naiveResult = minMaxNaive(arr);
+            const naiveComps = naiveResult.comps;
+
+            const formulaComps = Math.floor(3 * size / 2) - 2;
+
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><strong>${size.toLocaleString()}</strong></td>
+                <td style="color: var(--success-color); font-weight: 600;">${dcComps.toLocaleString()}</td>
+                <td>${naiveComps.toLocaleString()}</td>
+                <td style="color: var(--accent-color);">${formulaComps.toLocaleString()}</td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
+    // Auto-run on initial load
+    window.onload = function() {
+        runCustomDemo();
+        runBenchmark();
+    };
+</script>
+
+</body>
+</html>
